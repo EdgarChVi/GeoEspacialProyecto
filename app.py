@@ -441,7 +441,7 @@ def delta_rgb_mean(arr2006, arr2015):
 st.sidebar.header("Controles")
 
 anio = st.sidebar.radio("Año para visualizar histograma y tabla:", ["2006–2007", "2015–2018"], index=0)
-n_muestra = st.sidebar.slider("Tamaño de muestra de píxeles (tabla e histograma)", 500, 20000, 5000, 500)
+n_muestra = st.sidebar.slider("Tamaño de muestra de píxeles (tabla e histograma)", 500, 20000, 500, 500)
 
 
 # ----------------------------
@@ -515,24 +515,22 @@ def pil_to_base64(img):
     encoded = base64.b64encode(buffer.getvalue()).decode()
     return "data:image/png;base64," + encoded
 
-def tif_to_png_scaled(arr, max_width=1024):
-    """
-    Convierte un raster RGB (bands, rows, cols) en una imagen PIL escalada.
-    max_width define el ancho máximo para mejor performance en Streamlit Cloud.
-    """
-    rgb = np.transpose(arr[:3], (1, 2, 0)).astype(np.uint8)  # (H,W,3)
+def tif_to_png_scaled(arr, max_width=800, max_height=800):
+    """Reduce resolución manteniendo proporción y limitando ancho/alto."""
+    rgb = np.transpose(arr[:3], (1, 2, 0)).astype(np.uint8)
     img = Image.fromarray(rgb)
     w, h = img.size
 
-    if w > max_width:
-        scale = max_width / w
-        new_size = (max_width, int(h * scale))
-        img = img.resize(new_size, Image.Resampling.LANCZOS)
+    scale_w = max_width / w
+    scale_h = max_height / h
+    scale = min(scale_w, scale_h, 1.0)  # nunca aumentar
 
+    new_size = (int(w * scale), int(h * scale))
+    img = img.resize(new_size, Image.Resampling.LANCZOS)
     return img
 
-img06 = tif_to_png_scaled(arr06)  
-img15 = tif_to_png_scaled(arr15)
+img06 = tif_to_png_scaled(arr06, max_width=700, max_height=700)
+img15 = tif_to_png_scaled(arr15, max_width=700, max_height=700)
 
 # ----------------------------
 # Limites para ImageOverlay
