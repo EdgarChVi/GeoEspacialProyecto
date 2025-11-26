@@ -20,6 +20,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 import matplotlib.colors as mcolors
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
+import base64
+from io import BytesIO
+from PIL import Image
 
 # ----------------------------
 # 2) CONFIGURACIÓN BÁSICA STREAMLIT
@@ -460,6 +463,8 @@ if anio.startswith("2006"):
 else:
     histograma_rgb(arr15, "Distribución RGB — 2015–2018")
 
+
+
 # ----------------------------
 # 12) SECCIÓN 3 — MAPA INTERACTIVO (FOOTPRINTS)
 # ----------------------------
@@ -480,6 +485,64 @@ folium.GeoJson(fp06_wgs.__geo_interface__, name="2006–2007",
                style_function=lambda x: {"color": "#1f77b4", "weight": 3, "fillOpacity": 0.05}).add_to(m)
 folium.GeoJson(fp15_wgs.__geo_interface__, name="2015–2018",
                style_function=lambda x: {"color": "#d62728", "weight": 3, "dashArray": "5,5", "fillOpacity": 0.05}).add_to(m)
+
+def pil_to_base64(img):
+    """Convierte una imagen PIL a base64 PNG, apta para Folium ImageOverlay."""
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    encoded = base64.b64encode(buffer.getvalue()).decode()
+    return "data:image/png;base64," + encoded
+
+def tif_to_png_scaled(arr, max_width=1024):
+    """
+    Convierte un raster RGB (bands, rows, cols) en una imagen PIL escalada.
+    max_width define el ancho máximo para mejor performance en Streamlit Cloud.
+    """
+    rgb = np.transpose(arr[:3], (1, 2, 0)).astype(np.uint8)  # (H,W,3)
+    img = Image.fromarray(rgb)
+    w, h = img.size
+
+    if w > max_width:
+        scale = max_width / w
+        new_size = (max_width, int(h * scale))
+        img = img.resize(new_size, Image.Resampling.LANCZOS)
+
+    return img
+
+img06 = tif_to_png_scaled(arr06)  
+img15 = tif_to_png_scaled(arr15)
+
+# ----------------------------
+# Limites para ImageOverlay
+# ----------------------------
+
+b06 = fp06_wgs.total_bounds
+b15 = fp15_wgs.total_bounds
+
+bounds06 = [[b06[1], b06[0]], [b06[3], b06[2]]]  # [[sur, este], [norte, oeste]]
+bounds15 = [[b15[1], b15[0]], [b15[3], b15[2]]]
+
+# ----------------------------
+# Agregar imágenes como capas raster
+# ----------------------------
+folium.raster_layers.ImageOverlay(
+    image=pil_to_base64(img06),
+    bounds=bounds06,
+    name="Ortofoto 2006–2007 (preview)",
+    opacity=0.75,
+    interactive=True,
+    cross_origin=False
+).add_to(m)
+
+folium.raster_layers.ImageOverlay(
+    image=pil_to_base64(img15),
+    bounds=bounds15,
+    name="Ortofoto 2015–2018 (preview)",
+    opacity=0.75,
+    interactive=True,
+    cross_origin=False
+).add_to(m)
+
 
 folium.LayerControl(collapsed=False).add_to(m)
 st_folium(m, height=500, use_container_width=True)
