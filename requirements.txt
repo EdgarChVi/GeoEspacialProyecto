@@ -1,20 +1,23 @@
 streamlit==1.39.0
-numpy==2.0.2
-pandas==2.2.2
-matplotlib==3.8.4
 
-rasterio==1.3.9
-affine==2.4.0
-shapely==2.0.4
-geopandas==0.14.4
-pyproj==3.6.1
-folium==0.15.1
-streamlit-folium==0.15.0
+numpy
+pandas
 
-plotly==5.24.1
+# Raster y GIS
+rasterio
+affine
+geopandas
+shapely
+pyproj
+fiona
 
-Pillow==10.2.0
+# Mapa interactivo
+folium
+streamlit-folium
 
-# Necesario para geopandas/shapely/pyproj
-fiona==1.9.5
-click==8.1.7
+# Visualización
+matplotlib
+plotly
+
+# Manejo de imágenes para Folium y downsampling
+Pillow
