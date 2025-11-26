@@ -47,8 +47,8 @@ st.write("El objetivo del proyecto en desarrollo, o con los datos obtenidos, es 
 # ----------------------------
 # 3) RUTAS, CLASES Y PALETAS
 # ----------------------------
-RUTA_2006 = "Tarea3/data/SanRamon_06-07.tif"
-RUTA_2015 = "Tarea3/data/SanRamon_15-18.tif"
+RUTA_2006 = "data/SanRamon_06-07.tif"
+RUTA_2015 = "data/SanRamon_15-18.tif"
 
 CLASSES = ["Suelo", "Agua/Sombra", "Vegetación", "Urbano/Construcción", "Indefinido"]
 
@@ -489,7 +489,7 @@ st_folium(m, height=500, use_container_width=True)
 # ----------------------------
 
 # Factor de reducción solo para mapas 
-FACTOR_MAP = 4  
+FACTOR_MAP = 8  
 
 arr06_map = arr06[:, ::FACTOR_MAP, ::FACTOR_MAP]
 arr15_map = arr15[:, ::FACTOR_MAP, ::FACTOR_MAP]
