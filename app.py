@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 import matplotlib.colors as mcolors
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
+import plotly.express as px
 import base64
 from io import BytesIO
 from PIL import Image
@@ -393,20 +394,41 @@ def sample_pixels(arr, transform_tuple, n=5000, seed=42):
 
     return pd.DataFrame({"x": xs, "y": ys, "R": r, "G": g, "B": b})
 
-def histograma_rgb(arr, titulo):
+def histograma_rgb(arr, titulo, sample_size):
     r = arr[0].ravel()
     g = arr[1].ravel()
     b = arr[2].ravel()
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.hist(r, bins=50, alpha=0.5, label='Rojo')
-    ax.hist(g, bins=50, alpha=0.5, label='Verde')
-    ax.hist(b, bins=50, alpha=0.5, label='Azul')
-    ax.set_title(titulo)
-    ax.set_xlabel("Intensidad (0–255)")
-    ax.set_ylabel("Frecuencia")
-    ax.legend()
-    ax.grid(alpha=0.3)
-    st.pyplot(fig, clear_figure=True)
+
+    total = len(r)
+
+    # Muestreo aleatorio según el slider
+    if sample_size < total:
+        idx = np.random.choice(total, size=sample_size, replace=False)
+        r = r[idx]
+        g = g[idx]
+        b = b[idx]
+
+    df = pd.DataFrame({
+        "Rojo": r,
+        "Verde": g,
+        "Azul": b
+    })
+
+    fig = px.histogram(
+        df,
+        barmode="overlay",
+        opacity=0.6,
+        title=titulo
+    )
+
+    fig.update_layout(
+        xaxis_title="Intensidad (0–255)",
+        yaxis_title=f"Frecuencia (muestra: {sample_size:,} píxeles)",
+        legend_title="Canal",
+        bargap=0.05
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 def delta_rgb_mean(arr2006, arr2015):
     """Promedio de diferencia absoluta en RGB (canales 1-3)."""
@@ -419,7 +441,7 @@ def delta_rgb_mean(arr2006, arr2015):
 st.sidebar.header("Controles")
 
 anio = st.sidebar.radio("Año para visualizar histograma y tabla:", ["2006–2007", "2015–2018"], index=0)
-n_muestra = st.sidebar.slider("Tamaño de muestra de píxeles (tabla)", 500, 20000, 5000, 500)
+n_muestra = st.sidebar.slider("Tamaño de muestra de píxeles (tabla e histograma)", 500, 20000, 5000, 500)
 
 
 # ----------------------------
@@ -459,9 +481,9 @@ else:
 # ----------------------------
 st.header("Gráfico estadístico — Histograma RGB")
 if anio.startswith("2006"):
-    histograma_rgb(arr06, "Distribución RGB — 2006–2007")
+    histograma_rgb(arr06, "Distribución RGB — 2006–2007", n_muestra)
 else:
-    histograma_rgb(arr15, "Distribución RGB — 2015–2018")
+    histograma_rgb(arr15, "Distribución RGB — 2015–2018", n_muestra)
 
 
 
